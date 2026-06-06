@@ -3,23 +3,28 @@ import { api } from "../../lib/api.js";
 import {
   createDemoConversation,
   createDemoDirect,
+  cloneDemoValue,
   demoConversations,
   demoMessages,
-  searchDemoMessages,
   STATIC_DEMO
 } from "../../lib/demo.js";
 
-export const fetchConversations = createAsyncThunk("chat/fetchConversations", async () => {
+export const fetchConversations = createAsyncThunk("chat/fetchConversations", async (_, { getState }) => {
   if (STATIC_DEMO) {
-    return demoConversations;
+    const existing = getState().chat.conversations;
+    return existing.length ? existing : cloneDemoValue(demoConversations);
   }
   const { data } = await api.get("/conversations");
   return data.conversations;
 });
 
-export const fetchMessages = createAsyncThunk("chat/fetchMessages", async (conversationId) => {
+export const fetchMessages = createAsyncThunk("chat/fetchMessages", async (conversationId, { getState }) => {
   if (STATIC_DEMO) {
-    return { conversationId, messages: demoMessages[conversationId] ?? [] };
+    const existing = getState().chat.messagesByConversation[conversationId];
+    return {
+      conversationId,
+      messages: existing ?? cloneDemoValue(demoMessages[conversationId] ?? [])
+    };
   }
   const { data } = await api.get(`/conversations/${conversationId}/messages`);
   return { conversationId, messages: data.messages };
@@ -41,9 +46,15 @@ export const createDirect = createAsyncThunk("chat/createDirect", async (memberI
   return data.conversation;
 });
 
-export const searchMessages = createAsyncThunk("chat/searchMessages", async (q) => {
+export const searchMessages = createAsyncThunk("chat/searchMessages", async (q, { getState }) => {
   if (STATIC_DEMO) {
-    return searchDemoMessages(q);
+    const normalized = q.trim().toLowerCase();
+    if (!normalized) return [];
+
+    const loadedMessages = Object.values(getState().chat.messagesByConversation).flat();
+    const seededMessages = Object.values(demoMessages).flat();
+    const merged = new Map([...seededMessages, ...loadedMessages].map((message) => [message.id, message]));
+    return [...merged.values()].filter((message) => message.body.toLowerCase().includes(normalized));
   }
   const { data } = await api.get("/messages/search", { params: { q } });
   return data.messages;
@@ -55,6 +66,14 @@ const upsertById = (items, item) => {
     items[index] = { ...items[index], ...item };
   } else {
     items.unshift(item);
+  }
+};
+
+const moveConversationToTop = (items, conversationId) => {
+  const index = items.findIndex((item) => item.id === conversationId);
+  if (index > 0) {
+    const [conversation] = items.splice(index, 1);
+    items.unshift(conversation);
   }
 };
 
@@ -86,6 +105,7 @@ const chatSlice = createSlice({
           createdAt: message.createdAt
         };
         conversation.updatedAt = message.createdAt;
+        moveConversationToTop(state.conversations, conversationId);
       }
     },
     receiveMessage(state, action) {
@@ -108,6 +128,7 @@ const chatSlice = createSlice({
           createdAt: message.createdAt
         };
         conversation.updatedAt = message.createdAt;
+        moveConversationToTop(state.conversations, conversationId);
         if (state.activeConversationId !== conversationId) {
           conversation.unreadCount = (conversation.unreadCount ?? 0) + 1;
         }
@@ -172,10 +193,12 @@ const chatSlice = createSlice({
       })
       .addCase(createGroup.fulfilled, (state, action) => {
         upsertById(state.conversations, action.payload);
+        state.messagesByConversation[action.payload.id] ??= [];
         state.activeConversationId = action.payload.id;
       })
       .addCase(createDirect.fulfilled, (state, action) => {
         upsertById(state.conversations, action.payload);
+        state.messagesByConversation[action.payload.id] ??= [];
         state.activeConversationId = action.payload.id;
       })
       .addCase(searchMessages.fulfilled, (state, action) => {

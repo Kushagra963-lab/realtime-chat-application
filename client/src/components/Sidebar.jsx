@@ -1,11 +1,11 @@
-import { Bell, LogOut, MessageCirclePlus, Search, UsersRound } from "lucide-react";
+import { Bell, LogOut, MessageCirclePlus, RotateCcw, Search, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../features/auth/authSlice.js";
 import { createDirect, setActiveConversation } from "../features/chat/chatSlice.js";
 import { toggleNotifications } from "../features/notifications/notificationsSlice.js";
 import { api } from "../lib/api.js";
-import { demoUsers, STATIC_DEMO } from "../lib/demo.js";
+import { DEMO_STORAGE_KEY, demoUsers, STATIC_DEMO } from "../lib/demo.js";
 import { Avatar } from "./Avatar.jsx";
 import { GroupModal } from "./GroupModal.jsx";
 
@@ -67,15 +67,30 @@ export function Sidebar() {
                 <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-[#f97316]" />
               )}
             </button>
-            <button
-              className="rounded-lg p-2 hover:bg-[#edf1f5]"
-              type="button"
-              onClick={() => dispatch(logout())}
-              aria-label="Log out"
-              title="Log out"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+            {STATIC_DEMO ? (
+              <button
+                className="rounded-lg p-2 hover:bg-[#edf1f5]"
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem(DEMO_STORAGE_KEY);
+                  window.location.reload();
+                }}
+                aria-label="Reset demo"
+                title="Reset demo"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </button>
+            ) : (
+              <button
+                className="rounded-lg p-2 hover:bg-[#edf1f5]"
+                type="button"
+                onClick={() => dispatch(logout())}
+                aria-label="Log out"
+                title="Log out"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
 

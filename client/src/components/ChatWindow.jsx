@@ -7,9 +7,10 @@ import {
   fetchMessages,
   markMessageFailed,
   receiveMessage,
-  searchMessages
+  searchMessages,
+  setTyping
 } from "../features/chat/chatSlice.js";
-import { STATIC_DEMO } from "../lib/demo.js";
+import { buildDemoReply, STATIC_DEMO } from "../lib/demo.js";
 import { getSocket } from "../lib/socket.js";
 import { Avatar } from "./Avatar.jsx";
 
@@ -89,7 +90,7 @@ export function ChatWindow() {
 
     if (STATIC_DEMO) {
       window.setTimeout(() => {
-        setLatency(42);
+        setLatency(38 + Math.floor(Math.random() * 34));
         dispatch(receiveMessage({
           conversationId: activeConversationId,
           clientId,
@@ -100,6 +101,28 @@ export function ChatWindow() {
           }
         }));
       }, 90);
+
+      const reply = buildDemoReply(conversation, trimmed);
+      if (reply) {
+        window.setTimeout(() => {
+          dispatch(setTyping({
+            conversationId: activeConversationId,
+            userId: reply.sender.id,
+            isTyping: true
+          }));
+        }, 550);
+        window.setTimeout(() => {
+          dispatch(setTyping({
+            conversationId: activeConversationId,
+            userId: reply.sender.id,
+            isTyping: false
+          }));
+          dispatch(receiveMessage({
+            conversationId: activeConversationId,
+            message: reply
+          }));
+        }, 1450);
+      }
       return;
     }
 
@@ -154,7 +177,14 @@ export function ChatWindow() {
       <header className="border-b border-[#d8dee6] bg-white px-4 py-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold text-[#17202a]">{conversation.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="truncate text-lg font-semibold text-[#17202a]">{conversation.name}</h1>
+              {STATIC_DEMO && (
+                <span className="rounded-lg bg-[#e6f2f3] px-2 py-0.5 text-xs font-semibold text-[#1f6f78]">
+                  GitHub demo
+                </span>
+              )}
+            </div>
             <p className="truncate text-sm text-[#657484]">
               {conversation.members.length} member{conversation.members.length === 1 ? "" : "s"}
               {latency !== null ? ` · ${latency} ms ack` : ""}
@@ -166,7 +196,12 @@ export function ChatWindow() {
             <input
               className="w-full bg-transparent outline-none"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                if (!event.target.value.trim()) {
+                  dispatch(searchMessages(""));
+                }
+              }}
               placeholder="Search messages"
             />
           </form>
@@ -220,6 +255,7 @@ export function ChatWindow() {
             <textarea
               className="max-h-36 min-h-12 flex-1 resize-none rounded-lg border border-[#cbd5df] px-3 py-3 outline-none focus:border-[#1f6f78]"
               value={body}
+              placeholder={`Message ${conversation.name}`}
               onChange={(event) => onBodyChange(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {

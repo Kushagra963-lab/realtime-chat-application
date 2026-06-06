@@ -1,4 +1,5 @@
 export const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === "true";
+export const DEMO_STORAGE_KEY = "realtime-chat-demo-state-v3";
 
 const now = new Date();
 const minutesAgo = (minutes) => new Date(now.getTime() - minutes * 60 * 1000).toISOString();
@@ -70,7 +71,7 @@ export const demoConversations = [
     ],
     unreadCount: 2,
     lastMessage: {
-      body: "Socket acknowledgements are staying under the target in local tests.",
+      body: "Latency is stable enough for the 200-user demo run.",
       sender: "u-dev",
       createdAt: minutesAgo(2)
     },
@@ -115,12 +116,20 @@ export const demoMessages = {
       id: "m-1",
       conversation: "c-product",
       sender: demoUsers[1],
-      body: "Group chat, direct messages, unread notifications, and search are wired into the same state flow.",
-      createdAt: minutesAgo(35),
-      updatedAt: minutesAgo(35)
+      body: "Morning. I loaded the group flow with unread badges, search, typing state, and notification fan-out.",
+      createdAt: minutesAgo(68),
+      updatedAt: minutesAgo(68)
     },
     {
       id: "m-2",
+      conversation: "c-product",
+      sender: demoUsers[2],
+      body: "The backend path is still MERN: Express APIs, MongoDB indexes, JWT auth, and Socket.io rooms.",
+      createdAt: minutesAgo(54),
+      updatedAt: minutesAgo(54)
+    },
+    {
+      id: "m-3",
       conversation: "c-product",
       sender: demoUser,
       body: "Nice. Keep the UI compact and work-focused so it feels like a real chat workspace.",
@@ -128,17 +137,33 @@ export const demoMessages = {
       updatedAt: minutesAgo(28)
     },
     {
-      id: "m-3",
+      id: "m-4",
+      conversation: "c-product",
+      sender: demoUsers[3],
+      body: "Search is useful now. Try looking for MongoDB, Socket.io, notifications, or latency.",
+      createdAt: minutesAgo(16),
+      updatedAt: minutesAgo(16)
+    },
+    {
+      id: "m-5",
       conversation: "c-product",
       sender: demoUsers[4],
-      body: "Socket acknowledgements are staying under the target in local tests.",
+      body: "Latency is stable enough for the 200-user demo run.",
       createdAt: minutesAgo(2),
       updatedAt: minutesAgo(2)
     }
   ],
   "c-maya": [
     {
-      id: "m-4",
+      id: "m-6",
+      conversation: "c-maya",
+      sender: demoUser,
+      body: "Can you sanity-check the public demo after Pages finishes building?",
+      createdAt: minutesAgo(41),
+      updatedAt: minutesAgo(41)
+    },
+    {
+      id: "m-7",
       conversation: "c-maya",
       sender: demoUsers[1],
       body: "The GitHub Pages demo is live and the full stack is deploy-ready.",
@@ -148,12 +173,28 @@ export const demoMessages = {
   ],
   "c-standup": [
     {
-      id: "m-5",
+      id: "m-8",
       conversation: "c-standup",
       sender: demoUsers[2],
       body: "Redis adapter support is wired for horizontal scale.",
       createdAt: minutesAgo(55),
       updatedAt: minutesAgo(55)
+    },
+    {
+      id: "m-9",
+      conversation: "c-standup",
+      sender: demoUser,
+      body: "Good. The static demo should stay independent from the production backend.",
+      createdAt: minutesAgo(44),
+      updatedAt: minutesAgo(44)
+    },
+    {
+      id: "m-10",
+      conversation: "c-standup",
+      sender: demoUsers[4],
+      body: "Exactly. GitHub Pages gets the interactive showcase; Render or Railway can run the realtime server.",
+      createdAt: minutesAgo(32),
+      updatedAt: minutesAgo(32)
     }
   ]
 };
@@ -162,9 +203,9 @@ export const demoNotifications = [
   {
     id: "n-1",
     conversation: "c-product",
-    message: "m-3",
+    message: "m-5",
     type: "message",
-    text: "Dev: Socket acknowledgements are staying under the target in local tests.",
+    text: "Dev: Latency is stable enough for the 200-user demo run.",
     readAt: null,
     createdAt: minutesAgo(2)
   },
@@ -222,3 +263,30 @@ export function searchDemoMessages(query) {
     .filter((message) => message.body.toLowerCase().includes(normalized));
 }
 
+export function cloneDemoValue(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+export function buildDemoReply(conversation, originalBody) {
+  const peer = conversation?.members?.find((memberItem) => memberItem.user?.id !== demoUser.id)?.user;
+  if (!peer) return null;
+
+  const createdAt = new Date().toISOString();
+  const normalized = originalBody.toLowerCase();
+  const body = normalized.includes("search")
+    ? "Search picks that up immediately in this demo."
+    : normalized.includes("group")
+      ? "Group state is live here too; member lists and sidebar ordering update together."
+      : normalized.includes("hello") || normalized.includes("hi")
+        ? "Hey, the demo is responsive now."
+        : "Got it. The demo state updates instantly and stays in this browser.";
+
+  return {
+    id: `demo-reply-${Date.now()}`,
+    conversation: conversation.id,
+    sender: peer,
+    body,
+    createdAt,
+    updatedAt: createdAt
+  };
+}
