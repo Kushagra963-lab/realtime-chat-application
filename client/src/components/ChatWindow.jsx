@@ -9,6 +9,7 @@ import {
   receiveMessage,
   searchMessages
 } from "../features/chat/chatSlice.js";
+import { STATIC_DEMO } from "../lib/demo.js";
 import { getSocket } from "../lib/socket.js";
 import { Avatar } from "./Avatar.jsx";
 
@@ -85,6 +86,22 @@ export function ChatWindow() {
     setBody("");
     setLatency(null);
     socket?.emit("typing:stop", { conversationId: activeConversationId });
+
+    if (STATIC_DEMO) {
+      window.setTimeout(() => {
+        setLatency(42);
+        dispatch(receiveMessage({
+          conversationId: activeConversationId,
+          clientId,
+          message: {
+            ...optimisticMessage,
+            id: `demo-${clientId}`,
+            optimistic: false
+          }
+        }));
+      }, 90);
+      return;
+    }
 
     const sentAt = performance.now();
     socket?.emit(
@@ -226,4 +243,3 @@ export function ChatWindow() {
     </section>
   );
 }
-

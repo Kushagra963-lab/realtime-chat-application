@@ -5,6 +5,7 @@ import { logout } from "../features/auth/authSlice.js";
 import { createDirect, setActiveConversation } from "../features/chat/chatSlice.js";
 import { toggleNotifications } from "../features/notifications/notificationsSlice.js";
 import { api } from "../lib/api.js";
+import { demoUsers, STATIC_DEMO } from "../lib/demo.js";
 import { Avatar } from "./Avatar.jsx";
 import { GroupModal } from "./GroupModal.jsx";
 
@@ -22,6 +23,14 @@ export function Sidebar() {
     setQuery(value);
     if (!value.trim()) {
       setUsers([]);
+      return;
+    }
+    if (STATIC_DEMO) {
+      const normalized = value.toLowerCase();
+      setUsers(demoUsers.filter((candidate) => (
+        candidate.id !== user?.id
+        && `${candidate.name} ${candidate.email}`.toLowerCase().includes(normalized)
+      )));
       return;
     }
     const { data } = await api.get("/users/search", { params: { q: value } });
@@ -158,4 +167,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

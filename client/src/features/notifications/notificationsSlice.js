@@ -1,12 +1,19 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../lib/api.js";
+import { demoNotifications, STATIC_DEMO } from "../../lib/demo.js";
 
 export const fetchNotifications = createAsyncThunk("notifications/fetch", async () => {
+  if (STATIC_DEMO) {
+    return demoNotifications;
+  }
   const { data } = await api.get("/notifications");
   return data.notifications;
 });
 
 export const markAllNotificationsRead = createAsyncThunk("notifications/readAll", async () => {
+  if (STATIC_DEMO) {
+    return demoNotifications.length;
+  }
   const { data } = await api.patch("/notifications/read-all");
   return data.updated;
 });
@@ -55,4 +62,3 @@ export const {
 } = notificationsSlice.actions;
 
 export default notificationsSlice.reducer;
-

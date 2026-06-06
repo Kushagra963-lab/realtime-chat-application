@@ -1,20 +1,30 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api, setAuthToken } from "../../lib/api.js";
+import { demoUser, STATIC_DEMO } from "../../lib/demo.js";
 import { disconnectSocket } from "../../lib/socket.js";
 
 const token = localStorage.getItem("chat_token");
 
 export const register = createAsyncThunk("auth/register", async (payload) => {
+  if (STATIC_DEMO) {
+    return { user: { ...demoUser, name: payload.name || demoUser.name, email: payload.email }, token: "demo-token" };
+  }
   const { data } = await api.post("/auth/register", payload);
   return data;
 });
 
 export const login = createAsyncThunk("auth/login", async (payload) => {
+  if (STATIC_DEMO) {
+    return { user: { ...demoUser, email: payload.email || demoUser.email }, token: "demo-token" };
+  }
   const { data } = await api.post("/auth/login", payload);
   return data;
 });
 
 export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
+  if (STATIC_DEMO) {
+    return { user: demoUser };
+  }
   const { data } = await api.get("/auth/me");
   return data;
 });
@@ -22,9 +32,9 @@ export const fetchMe = createAsyncThunk("auth/fetchMe", async () => {
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    token,
-    user: null,
-    status: token ? "loading" : "idle",
+    token: STATIC_DEMO ? "demo-token" : token,
+    user: STATIC_DEMO ? demoUser : null,
+    status: STATIC_DEMO ? "authenticated" : token ? "loading" : "idle",
     error: ""
   },
   reducers: {
@@ -88,4 +98,3 @@ const authSlice = createSlice({
 
 export const { acceptOAuthToken, logout } = authSlice.actions;
 export default authSlice.reducer;
-

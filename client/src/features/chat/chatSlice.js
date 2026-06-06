@@ -1,27 +1,50 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../lib/api.js";
+import {
+  createDemoConversation,
+  createDemoDirect,
+  demoConversations,
+  demoMessages,
+  searchDemoMessages,
+  STATIC_DEMO
+} from "../../lib/demo.js";
 
 export const fetchConversations = createAsyncThunk("chat/fetchConversations", async () => {
+  if (STATIC_DEMO) {
+    return demoConversations;
+  }
   const { data } = await api.get("/conversations");
   return data.conversations;
 });
 
 export const fetchMessages = createAsyncThunk("chat/fetchMessages", async (conversationId) => {
+  if (STATIC_DEMO) {
+    return { conversationId, messages: demoMessages[conversationId] ?? [] };
+  }
   const { data } = await api.get(`/conversations/${conversationId}/messages`);
   return { conversationId, messages: data.messages };
 });
 
 export const createGroup = createAsyncThunk("chat/createGroup", async (payload) => {
+  if (STATIC_DEMO) {
+    return createDemoConversation(payload);
+  }
   const { data } = await api.post("/conversations/groups", payload);
   return data.conversation;
 });
 
 export const createDirect = createAsyncThunk("chat/createDirect", async (memberId) => {
+  if (STATIC_DEMO) {
+    return createDemoDirect(memberId);
+  }
   const { data } = await api.post("/conversations/direct", { memberId });
   return data.conversation;
 });
 
 export const searchMessages = createAsyncThunk("chat/searchMessages", async (q) => {
+  if (STATIC_DEMO) {
+    return searchDemoMessages(q);
+  }
   const { data } = await api.get("/messages/search", { params: { q } });
   return data.messages;
 });
@@ -173,4 +196,3 @@ export const {
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
-

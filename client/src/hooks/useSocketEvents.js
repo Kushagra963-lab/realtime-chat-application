@@ -6,6 +6,7 @@ import {
   updatePresence
 } from "../features/chat/chatSlice.js";
 import { receiveNotification } from "../features/notifications/notificationsSlice.js";
+import { STATIC_DEMO } from "../lib/demo.js";
 import { connectSocket, disconnectSocket } from "../lib/socket.js";
 
 export function useSocketEvents() {
@@ -13,6 +14,10 @@ export function useSocketEvents() {
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
+    if (STATIC_DEMO) {
+      return undefined;
+    }
+
     if (!token) {
       disconnectSocket();
       return undefined;
@@ -38,4 +43,3 @@ export function useSocketEvents() {
     };
   }, [dispatch, token]);
 }
-

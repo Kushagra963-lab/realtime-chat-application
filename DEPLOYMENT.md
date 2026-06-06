@@ -15,6 +15,19 @@ git push -u origin main
 
 The project test/build commands are ready for GitHub Actions. If your token has `workflow` scope, add a workflow that runs `npm ci`, `npm run test -w server`, `npm run lint -w client`, and `npm run build -w client`.
 
+## GitHub Pages
+
+GitHub Pages can host the static client demo. It cannot run MongoDB, Express, Socket.io, Redis, or Google OAuth callbacks, so the Pages build uses client-side demo data.
+
+```bash
+npm run build:pages
+git add docs
+git commit -m "Deploy GitHub Pages demo"
+git push
+```
+
+Then set repository Pages source to `main` / `docs`.
+
 ## Render
 
 1. Create a MongoDB Atlas cluster.

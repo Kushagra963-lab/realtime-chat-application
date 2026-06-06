@@ -2,6 +2,8 @@
 
 A MERN + Socket.io + Tailwind chat application with JWT auth, Google OAuth, groups, notifications, message search, presence, typing indicators, Redux Toolkit state, and production deployment scaffolding.
 
+Live GitHub demo: https://kushagra963-lab.github.io/realtime-chat-application/
+
 ## Features
 
 - Realtime Socket.io messaging with optimistic UI and delivery acknowledgements.
@@ -29,6 +31,16 @@ docker compose up --build
 ```
 
 The client runs at `http://localhost:5173` and the API at `http://localhost:5000`.
+
+## Always-Available GitHub Demo
+
+The repository includes a GitHub Pages static demo build. It uses seeded client-side data so the chat UI, search, groups, notifications, and optimistic sends remain available from GitHub even when no Node/Mongo/Redis backend is running.
+
+```bash
+npm run build:pages
+```
+
+Publish the generated `docs/` folder from the `main` branch in GitHub Pages settings.
 
 ## Seed Demo Users
 

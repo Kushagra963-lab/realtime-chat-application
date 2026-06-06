@@ -3,6 +3,7 @@ import { Search, UsersRound, X } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { api } from "../lib/api.js";
 import { createGroup } from "../features/chat/chatSlice.js";
+import { demoUser, demoUsers, STATIC_DEMO } from "../lib/demo.js";
 import { Avatar } from "./Avatar.jsx";
 
 export function GroupModal({ onClose }) {
@@ -16,6 +17,14 @@ export function GroupModal({ onClose }) {
     setQuery(value);
     if (!value.trim()) {
       setResults([]);
+      return;
+    }
+    if (STATIC_DEMO) {
+      const normalized = value.toLowerCase();
+      setResults(demoUsers.filter((user) => (
+        user.id !== demoUser.id
+        && `${user.name} ${user.email}`.toLowerCase().includes(normalized)
+      )));
       return;
     }
     const { data } = await api.get("/users/search", { params: { q: value } });
@@ -119,4 +128,3 @@ export function GroupModal({ onClose }) {
     </div>
   );
 }
-

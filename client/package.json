@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "build:pages": "VITE_STATIC_DEMO=true VITE_BASE_PATH=/realtime-chat-application/ vite build --outDir ../docs --emptyOutDir && cp ../docs/index.html ../docs/404.html",
     "preview": "vite preview --host 0.0.0.0",
     "lint": "eslint ."
   },
@@ -31,4 +32,3 @@
     "vite": "^6.0.7"
   }
 }
-
